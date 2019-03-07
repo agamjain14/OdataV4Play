@@ -1,36 +1,25 @@
 package net.ajn.olingo
 import java.net.URI
-import java.util
-import java.util.Base64
+
+import org.apache.http.client.methods.HttpGet
 
 // import net.ajn.olingo.client.config.ClientConfig
-import org.apache.olingo.client.api.communication.response.ODataRetrieveResponse
-import org.apache.olingo.client.api.domain.ClientServiceDocument
-import org.apache.olingo.client.core.ODataClientFactory
-import org.apache.olingo.client.core.http.{NTLMAuthHttpClientFactory, ProxyWrappingHttpClientFactory}
+import java.nio.charset.StandardCharsets
 
-
-
-import org.apache.http.HttpHeaders
+import io.circe.generic.auto._
+import io.circe.parser._
+import io.circe.syntax._
+import net.ajn.olingo.client.config._
+import org.apache.http.{HttpHeaders, HttpHost}
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
-
-
-import scala.collection.JavaConverters._
-
 import org.apache.http.util.EntityUtils
-import java.nio.charset.StandardCharsets
-
-import org.apache.http.HttpHost
-import org.apache.http.client.config.RequestConfig
-import net.ajn.olingo.client.config._
-
-import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 
 
-object OlingoSampleApp {
+/*object OlingoSampleApp {
 
 
   val username: String = "atosinter"
@@ -44,45 +33,73 @@ object OlingoSampleApp {
 
 
 private def apacheHttpClient(): Unit = {
-  val tokenEndPoint = "https://atosstaging.plateau.com/learning/oauth-api/rest/v1/token"
 
-  val proxy = new HttpHost("193.56.47.20", 8080, "http")
 
-  val config = RequestConfig.custom.setProxy(proxy).build
+
+
+  // CREATING THE HTTP CLIENT
   val client = HttpClients.createDefault()
+
+  // TO RUN BEHIND THE PROXY
+  val proxy = new HttpHost("193.56.47.20", 8080, "http")
+  val config = RequestConfig.custom.setProxy(proxy).build
+
+
+  // CREATING THE URI
+  val tokenEndPoint = "https://atosstaging.plateau.com/learning/oauth-api/rest/v1/token"
   val uri = new URI(tokenEndPoint)
+
+  // CREATING THE POST HEADER
   val post = new HttpPost(uri)
   post.setConfig(config)
   post.addHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-  post.addHeader(HttpHeaders.AUTHORIZATION, builtBasicAuthHeader)
+  post.addHeader(HttpHeaders.AUTHORIZATION, buildBasicAuthHeader)
   println(post.toString)
 
-
+  // CIRCE
   val clientConfig = ClientConfig(grant_type = "client_credentials",scope = ScopeConfig(userId = "NL06715",companyId = "atosinter",userType = "user",resourceType = "learning_public_api"))
   val jsonString: String = clientConfig.asJson.noSpaces
   post.setEntity(new StringEntity(jsonString))
 
+  // RUN THE CLIENT
   val resp = client.execute(post)
   try {
     val entity = resp.getEntity
     println(resp.getStatusLine.getStatusCode, resp.getStatusLine.getReasonPhrase)
 
+    // PRINTING THE TOKEN
     val tokenString = EntityUtils.toString(entity, StandardCharsets.UTF_8)
     val token = decode[Token](tokenString)
-
-    println(token)
+    // val authToken = Right()
+    // println("TEST => " + token)
+    val authToken = token match {
+      case Right(token) => {
+        token.access_token
+      }
+      case Left(error) => println(error.getMessage())
+    }
+    println(authToken)
   } finally {
     resp.close()
   }
+
+  val endPoint: String = "https://atosstaging.plateau.com/learning/odatav4/public/user/user-service/v1/learningapprovals"
+  val uri1 = new URI(endPoint)
+
+  /*val get = new HttpGet()
+  get.setConfig(config)
+  get.addHeader(HttpHeaders.AUTHORIZATION, )*/
+
+
 }
 
   private def getMetadata(): Unit = {
-    val endPoint: String = "https://atosstaging.plateau.com/learning/odatav4/public/user/learningPlan/v1/"
+
   }
 
 
 
-private def builtBasicAuthHeader()= {
+private def buildBasicAuthHeader()= {
   val auth: String = s"$username:$pwd"
   val encodedAuth: String = org.apache.commons.codec.binary.Base64.encodeBase64String(auth.getBytes("UTF-8"))
 
@@ -122,3 +139,4 @@ private def builtBasicAuthHeader()= {
     res
   }*/
 }
+*/
